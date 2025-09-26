@@ -129,33 +129,10 @@ REDHAT_LDAP_CONFIG="config/redhat-ldap.json" uv run python -m redhat_ldap_mcp.se
 
 ## 🔧 MCP Client Configuration
 
-### Claude Desktop / Cursor
+### Claude CLI
 
-Option 1: Using the wrapper script (recommended):
-```json
-{
-  "mcpServers": {
-    "redhat-ldap": {
-      "command": "/absolute/path/to/RedHatLDAP-MCP/scripts/run_mcp_server.sh"
-    }
-  }
-}
-```
-
-Option 2: Direct command:
-```json
-{
-  "mcpServers": {
-    "redhat-ldap": {
-      "command": "uv",
-      "args": ["run", "python", "-m", "redhat_ldap_mcp.server"],
-      "cwd": "/path/to/RedHatLDAP-MCP",
-      "env": {
-        "REDHAT_LDAP_CONFIG": "/path/to/config/redhat-ldap.json"
-      }
-    }
-  }
-}
+```bash
+claude mcp add redhat-ldap "scripts/run_mcp_server.sh" -e REDHAT_LDAP_CONFIG=$PWD/config/redhat-ldap.json
 ```
 
 ## 📚 Available Tools
