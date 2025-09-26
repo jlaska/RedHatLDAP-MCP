@@ -53,6 +53,43 @@ class OrganizationTool:
         logger.info(f"Built org chart with {self._count_nodes(org_node)} total people")
         return org_node
 
+    def build_organization_chart_summary(
+        self, manager_id: str, max_depth: int = 3
+    ) -> dict[str, Any] | None:
+        """
+        Build a lightweight organization chart for reduced token usage.
+
+        Args:
+            manager_id: Manager identifier (uid, email, or DN)
+            max_depth: Maximum depth to traverse
+
+        Returns:
+            Lightweight organization chart data structure
+        """
+        logger.info(f"Building lightweight org chart for manager: {manager_id}, depth: {max_depth}")
+
+        # Get the manager's summary details
+        manager = self.people_tool.get_person_details(manager_id)
+        if not manager:
+            logger.warning(f"Manager not found: {manager_id}")
+            return None
+
+        # Convert to summary format
+        manager_summary = {
+            "uid": manager.get("uid"),
+            "cn": manager.get("cn"),
+            "title": manager.get("title") or manager.get("rhat_job_title"),
+            "department": manager.get("department") or manager.get("rhat_cost_center_desc"),
+            "country": manager.get("country"),
+        }
+        # Clean up None values
+        manager_summary = {k: v for k, v in manager_summary.items() if v}
+
+        # Build the org chart recursively in summary mode
+        org_node = self._build_org_node_summary(manager_summary, 0, max_depth)
+        logger.info(f"Built lightweight org chart with {self._count_nodes(org_node)} total people")
+        return org_node
+
     def get_manager_chain(self, person_id: str) -> list[dict[str, Any]]:
         """
         Get the management chain for a person (all managers up to the top).
@@ -95,17 +132,20 @@ class OrganizationTool:
         logger.info(f"Found {len(managers)} managers in chain")
         return managers
 
-    def find_direct_reports(self, manager_id: str) -> list[dict[str, Any]]:
+    def find_direct_reports(
+        self, manager_id: str, summary_mode: bool = False
+    ) -> list[dict[str, Any]]:
         """
         Find all direct reports for a manager.
 
         Args:
             manager_id: Manager identifier (uid, email, or DN)
+            summary_mode: If True, return lightweight summaries instead of full data
 
         Returns:
             List of direct reports
         """
-        logger.info(f"Finding direct reports for: {manager_id}")
+        logger.info(f"Finding direct reports for: {manager_id} (summary_mode={summary_mode})")
 
         # Get manager details to get their DN
         manager = self.people_tool.get_person_details(manager_id)
@@ -122,8 +162,13 @@ class OrganizationTool:
         search_filter = f"(manager={manager_dn})"
 
         try:
-            # Use comprehensive attributes list from people search tool
-            attributes = self.people_tool.get_person_attributes()
+            # Choose attributes based on mode
+            if summary_mode:
+                attributes = self.people_tool.get_person_summary_attributes()
+                process_func = self.people_tool._process_person_summary
+            else:
+                attributes = self.people_tool.get_person_attributes()
+                process_func = self.people_tool._process_person_entry
 
             results = self.connector.search(
                 search_base=self.people_tool._get_people_search_base(),
@@ -133,7 +178,7 @@ class OrganizationTool:
 
             direct_reports = []
             for entry in results:
-                person = self.people_tool._process_person_entry(entry)
+                person = process_func(entry)
                 if person and person.get("uid") != manager.get("uid"):  # Don't include manager
                     direct_reports.append(person)
 
@@ -205,6 +250,32 @@ class OrganizationTool:
 
             for report in direct_reports:
                 child_node = self._build_org_node(report, current_depth + 1, max_depth)
+                node["direct_reports"].append(child_node)
+
+        return node
+
+    def _build_org_node_summary(
+        self, person: dict[str, Any], current_depth: int, max_depth: int
+    ) -> dict[str, Any]:
+        """
+        Recursively build a lightweight organization node.
+
+        Args:
+            person: Person summary data
+            current_depth: Current depth in the tree
+            max_depth: Maximum depth to traverse
+
+        Returns:
+            Lightweight organization node
+        """
+        node = {"person": person, "direct_reports": [], "level": current_depth}
+
+        # If we haven't reached max depth, get direct reports
+        if current_depth < max_depth:
+            direct_reports = self.find_direct_reports(person.get("uid", ""), summary_mode=True)
+
+            for report in direct_reports:
+                child_node = self._build_org_node_summary(report, current_depth + 1, max_depth)
                 node["direct_reports"].append(child_node)
 
         return node

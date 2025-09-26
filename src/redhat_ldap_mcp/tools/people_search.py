@@ -67,6 +67,22 @@ class PeopleSearchTool:
 
         return attributes
 
+    def get_person_summary_attributes(self) -> list[str]:
+        """
+        Get minimal attributes for person summaries to reduce token usage.
+
+        Returns:
+            List of essential LDAP attribute names
+        """
+        return [
+            "uid",
+            "cn",
+            "title",
+            "rhatJobTitle",
+            "rhatCostCenterDesc",
+            "co",  # country
+        ]
+
     def search_people(self, query: str, max_results: int = 10) -> list[dict[str, Any]]:
         """
         Search for people in the directory.
@@ -300,6 +316,40 @@ class PeopleSearchTool:
         person = {k: v for k, v in person.items() if v}
 
         return person
+
+    def _process_person_summary(self, entry: dict[str, Any]) -> dict[str, Any]:
+        """
+        Process a person LDAP entry into a lightweight summary format.
+
+        Args:
+            entry: Raw LDAP entry
+
+        Returns:
+            Processed person summary dictionary
+        """
+        dn = entry.get("dn", "")
+        attrs = entry.get("attributes", {})
+
+        # Extract uid from DN if not in attributes
+        uid = attrs.get("uid")
+        if not uid and dn:
+            uid_match = re.search(r"uid=([^,]+)", dn)
+            if uid_match:
+                uid = uid_match.group(1)
+
+        # Build lightweight person summary
+        summary = {
+            "uid": uid,
+            "cn": attrs.get("cn"),
+            "title": attrs.get("title") or attrs.get("rhatJobTitle"),
+            "department": attrs.get("rhatCostCenterDesc"),
+            "country": attrs.get("co"),
+        }
+
+        # Clean up None values and empty strings
+        summary = {k: v for k, v in summary.items() if v}
+
+        return summary
 
     def _format_date(self, date_value: Any) -> str | None:
         """Format date value to string."""

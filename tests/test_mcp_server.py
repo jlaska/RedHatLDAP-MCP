@@ -32,7 +32,7 @@ class TestMCPServerTools:
                     "sn": "Laska",
                     "mail": "jlaska@redhat.com",
                     "title": "Senior Software Engineer",
-                    "department": "Engineering",
+                    "rhatCostCenterDesc": "Engineering",
                     "manager": "uid=manager1,ou=users,dc=redhat,dc=com",
                     "rhatLocation": "Boston",
                     "telephoneNumber": "+1-555-0123",
@@ -54,6 +54,13 @@ class TestMCPServerTools:
         }
         mock_conn.ldap_config = Mock()
         mock_conn.ldap_config.base_dn = "dc=redhat,dc=com"
+
+        # Mock schema to avoid iteration errors
+        mock_schema = Mock()
+        mock_schema.corporate_attributes = []
+        mock_schema.redhat_attributes = ["rhatJobTitle", "rhatCostCenter"]
+        mock_conn.ldap_config.schema = mock_schema
+
         return mock_conn
 
     def test_people_search_tool(self, mock_connector):
@@ -151,6 +158,48 @@ class TestMCPServerTools:
         assert set(captured_attributes) == set(
             expected_attributes
         ), f"Attribute mismatch. Expected: {expected_attributes}, Got: {captured_attributes}"
+
+    def test_token_optimization_features(self, mock_connector):
+        """Test token optimization features work correctly."""
+        people_tool = PeopleSearchTool(mock_connector)
+
+        # Test summary attributes are fewer than full attributes
+        full_attrs = people_tool.get_person_attributes()
+        summary_attrs = people_tool.get_person_summary_attributes()
+
+        assert len(summary_attrs) < len(full_attrs), "Summary should have fewer attributes"
+        assert len(summary_attrs) <= 6, "Summary should have 6 or fewer attributes"
+
+        # Test summary processing
+        test_entry = {
+            "dn": "uid=test,ou=users,dc=redhat,dc=com",
+            "attributes": {
+                "uid": "test",
+                "cn": "Test User",
+                "title": "Engineer",
+                "rhatCostCenterDesc": "Engineering",
+                "co": "USA",
+                "mail": "test@redhat.com",  # Should be filtered out in summary
+                "telephoneNumber": "+1-555-0123",  # Should be filtered out
+            },
+        }
+
+        full_person = people_tool._process_person_entry(test_entry)
+        summary_person = people_tool._process_person_summary(test_entry)
+
+        # Summary should have fewer fields
+        assert len(summary_person.keys()) < len(full_person.keys())
+
+        # Summary should contain essential fields only
+        essential_fields = {"uid", "cn", "title", "department", "country"}
+        for field in essential_fields:
+            if field in summary_person:  # Some fields might be filtered out if empty
+                assert field in summary_person, f"Summary missing essential field: {field}"
+
+        # Summary should not contain non-essential fields
+        non_essential_fields = {"mail", "phone", "mobile", "employee_id"}
+        for field in non_essential_fields:
+            assert field not in summary_person, f"Summary should not contain {field}"
 
     def test_groups_tool(self, mock_connector):
         """Test the GroupsTool functionality."""

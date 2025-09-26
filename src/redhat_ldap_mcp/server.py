@@ -47,6 +47,16 @@ def get_connector() -> LDAPConnector:
     return _connector
 
 
+class PersonSummary(BaseModel):
+    """Lightweight person summary for organization charts and bulk operations."""
+
+    uid: str = Field(description="Unique identifier")
+    cn: str = Field(description="Common name")
+    title: str | None = Field(None, description="Job title")
+    department: str | None = Field(None, description="Department")
+    country: str | None = Field(None, description="Country")
+
+
 class PersonResult(BaseModel):
     """Person search result model."""
 
@@ -133,6 +143,16 @@ def get_person_details(
         raise
 
 
+class OrganizationNodeSummary(BaseModel):
+    """Lightweight organization chart node for reduced token usage."""
+
+    person: PersonSummary = Field(description="Person summary information")
+    direct_reports: list["OrganizationNodeSummary"] = Field(
+        default=[], description="Direct reports"
+    )
+    level: int = Field(description="Organizational level")
+
+
 class OrganizationNode(BaseModel):
     """Organization chart node model."""
 
@@ -161,6 +181,70 @@ def get_organization_chart(
         return None
     except Exception as e:
         logger.error(f"Organization chart failed: {e}")
+        raise
+
+
+@mcp.tool()
+def get_organization_chart_summary(
+    manager_id: str = Field(description="Manager identifier (uid, email, or DN)"),
+    max_depth: int = Field(default=3, description="Maximum depth to traverse"),
+) -> OrganizationNodeSummary | None:
+    """
+    Get lightweight organization chart for reduced token usage.
+
+    Returns a hierarchical view with minimal person data (uid, name, title, department, country).
+    Ideal for large organization charts where token usage is a concern.
+    """
+    connector = get_connector()
+    tool = OrganizationTool(connector)
+
+    try:
+        org_data = tool.build_organization_chart_summary(manager_id, max_depth)
+        if org_data:
+            return OrganizationNodeSummary(**org_data)
+        return None
+    except Exception as e:
+        logger.error(f"Organization chart summary failed: {e}")
+        raise
+
+
+@mcp.tool()
+def search_people_summary(
+    query: str = Field(description="Search query (name, email, uid, etc.)"),
+    max_results: int = Field(default=10, description="Maximum number of results"),
+) -> list[PersonSummary]:
+    """
+    Search for people with lightweight summaries for reduced token usage.
+
+    Returns minimal person data (uid, name, title, department, country) instead of full details.
+    Ideal when you need to search many people but don't need comprehensive information.
+    """
+    connector = get_connector()
+    tool = PeopleSearchTool(connector)
+
+    try:
+        # Get the search filter
+        search_filter = tool._build_search_filter(query)
+
+        # Use summary attributes
+        attributes = tool.get_person_summary_attributes()
+
+        results = connector.search(
+            search_base=tool._get_people_search_base(),
+            search_filter=search_filter,
+            attributes=attributes,
+            size_limit=max_results,
+        )
+
+        people = []
+        for entry in results:
+            person = tool._process_person_summary(entry)
+            if person:
+                people.append(PersonSummary(**person))
+
+        return people
+    except Exception as e:
+        logger.error(f"People summary search failed: {e}")
         raise
 
 
