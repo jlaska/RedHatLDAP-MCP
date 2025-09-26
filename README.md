@@ -131,6 +131,18 @@ REDHAT_LDAP_CONFIG="config/redhat-ldap.json" uv run python -m redhat_ldap_mcp.se
 
 ### Claude Desktop / Cursor
 
+Option 1: Using the wrapper script (recommended):
+```json
+{
+  "mcpServers": {
+    "redhat-ldap": {
+      "command": "/absolute/path/to/RedHatLDAP-MCP/scripts/run_mcp_server.sh"
+    }
+  }
+}
+```
+
+Option 2: Direct command:
 ```json
 {
   "mcpServers": {
@@ -148,13 +160,16 @@ REDHAT_LDAP_CONFIG="config/redhat-ldap.json" uv run python -m redhat_ldap_mcp.se
 
 ## 📚 Available Tools
 
-- `search_people` - Find people by name, email, or other attributes
-- `lookup_person` - Get detailed information about a specific person
-- `get_org_chart` - Generate organizational hierarchy charts
-- `find_by_manager` - Find direct reports for a manager
-- `search_by_location` - Find people by office or geographic location
-- `get_cost_centers` - List organizational cost centers
-- `export_contacts` - Export contact information in various formats
+- `search_people` - Find people by name, email, uid, or other attributes
+- `get_person_details` - Get detailed information about a specific person
+- `get_organization_chart` - Generate hierarchical org charts from any manager
+- `find_manager_chain` - Get the complete management chain for any person
+- `search_groups` - Search for groups and teams
+- `get_person_groups` - Find all groups a person belongs to
+- `get_group_members` - List all members of a specific group
+- `find_locations` - Discover office locations and people counts
+- `get_people_at_location` - Find all colleagues at a specific office
+- `test_connection` - Test LDAP connectivity and configuration
 
 ## 🧪 Development
 
