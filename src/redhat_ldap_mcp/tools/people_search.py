@@ -27,23 +27,14 @@ class PeopleSearchTool:
         self.connector = connector
         self.config = connector.ldap_config
 
-    def search_people(self, query: str, max_results: int = 10) -> list[dict[str, Any]]:
+    def get_person_attributes(self) -> list[str]:
         """
-        Search for people in the directory.
-
-        Args:
-            query: Search query (name, email, uid, etc.)
-            max_results: Maximum number of results to return
+        Get the comprehensive list of attributes to retrieve for person entries.
 
         Returns:
-            List of person dictionaries
+            List of LDAP attribute names
         """
-        logger.info(f"Searching for people: '{query}' (max {max_results} results)")
-
-        # Build search filter based on query
-        search_filter = self._build_search_filter(query)
-
-        # Define attributes to retrieve
+        # Define base attributes to retrieve
         attributes = [
             "uid",
             "cn",
@@ -73,6 +64,27 @@ class PeopleSearchTool:
             # Add Red Hat specific attributes
             if hasattr(schema, "redhat_attributes"):
                 attributes.extend(schema.redhat_attributes)
+
+        return attributes
+
+    def search_people(self, query: str, max_results: int = 10) -> list[dict[str, Any]]:
+        """
+        Search for people in the directory.
+
+        Args:
+            query: Search query (name, email, uid, etc.)
+            max_results: Maximum number of results to return
+
+        Returns:
+            List of person dictionaries
+        """
+        logger.info(f"Searching for people: '{query}' (max {max_results} results)")
+
+        # Build search filter based on query
+        search_filter = self._build_search_filter(query)
+
+        # Get comprehensive attributes list
+        attributes = self.get_person_attributes()
 
         try:
             results = self.connector.search(

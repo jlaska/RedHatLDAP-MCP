@@ -122,21 +122,13 @@ class OrganizationTool:
         search_filter = f"(manager={manager_dn})"
 
         try:
+            # Use comprehensive attributes list from people search tool
+            attributes = self.people_tool.get_person_attributes()
+
             results = self.connector.search(
                 search_base=self.people_tool._get_people_search_base(),
                 search_filter=search_filter,
-                attributes=[
-                    "uid",
-                    "cn",
-                    "sn",
-                    "givenName",
-                    "mail",
-                    "title",
-                    "rhatJobTitle",
-                    "rhatCostCenterDesc",
-                    "manager",
-                    "telephoneNumber",
-                ],
+                attributes=attributes,
             )
 
             direct_reports = []

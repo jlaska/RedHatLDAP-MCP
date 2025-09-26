@@ -96,6 +96,62 @@ class TestMCPServerTools:
         # org_chart could be None if person not found, that's OK for this test
         assert org_chart is None or isinstance(org_chart, dict)
 
+    def test_attribute_consistency_between_tools(self, mock_connector):
+        """Test that organization tool uses same comprehensive attributes as people search tool."""
+        # Mock schema to include extended attributes
+        mock_schema = Mock()
+        mock_schema.corporate_attributes = ["rhatWorkerId", "rhatPersonType"]
+        mock_schema.redhat_attributes = [
+            "rhatJobTitle",
+            "rhatCostCenter",
+            "rhatGeo",
+            "rhatLocation",
+        ]
+        mock_connector.ldap_config.schema = mock_schema
+
+        people_tool = PeopleSearchTool(mock_connector)
+        org_tool = OrganizationTool(mock_connector)
+
+        # Get expected attributes from people search tool
+        expected_attributes = people_tool.get_person_attributes()
+
+        # Mock to capture attributes used by organization tool
+        captured_attributes = []
+
+        def mock_search(*args, **kwargs):
+            captured_attributes.extend(kwargs.get("attributes", []))
+            return []
+
+        # Mock the organization tool's dependencies
+        org_tool.people_tool.get_person_details = Mock(
+            return_value={"uid": "manager1", "dn": "uid=manager1,ou=users,dc=redhat,dc=com"}
+        )
+        org_tool.people_tool._get_people_search_base = Mock(
+            return_value="ou=users,dc=redhat,dc=com"
+        )
+        mock_connector.search = mock_search
+
+        # Call find_direct_reports to trigger attribute usage
+        org_tool.find_direct_reports("manager1")
+
+        # Verify comprehensive attributes are used including location fields
+        location_attrs = [
+            "l",
+            "st",
+            "co",
+            "physicalDeliveryOfficeName",
+            "mobile",
+            "employeeNumber",
+            "employeeType",
+        ]
+        for attr in location_attrs:
+            assert attr in captured_attributes, f"Missing location attribute: {attr}"
+
+        # Verify the captured attributes match expected attributes
+        assert set(captured_attributes) == set(
+            expected_attributes
+        ), f"Attribute mismatch. Expected: {expected_attributes}, Got: {captured_attributes}"
+
     def test_groups_tool(self, mock_connector):
         """Test the GroupsTool functionality."""
         # Mock group search results
