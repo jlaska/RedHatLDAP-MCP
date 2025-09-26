@@ -97,7 +97,25 @@ Create a configuration file (e.g., `config/redhat-ldap.json`):
 
 ## 🚀 Usage
 
-### Stdio Mode (for MCP clients)
+### Claude CLI Integration (Recommended)
+
+For the easiest setup with Claude CLI, use the included wrapper script:
+
+```bash
+# Add to Claude CLI (from project directory)
+claude mcp add redhat-ldap /absolute/path/to/RedHatLDAP-MCP/scripts/run_mcp_server.sh
+
+# Verify connection
+claude mcp list
+
+# Use in Claude CLI conversations
+claude chat
+> What's John Doe's mobile number?
+```
+
+The wrapper script automatically configures the environment and uses the local configuration.
+
+### Stdio Mode (for other MCP clients)
 
 ```bash
 REDHAT_LDAP_CONFIG="config/redhat-ldap.json" uv run python -m redhat_ldap_mcp.server
