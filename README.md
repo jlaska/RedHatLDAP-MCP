@@ -33,6 +33,28 @@ This MCP server provides read-only access to corporate LDAP directories, enablin
 - **Rich search capabilities** across multiple person attributes
 - **Export functionality** for contact lists and org charts
 
+## 🔧 Available MCP Tools
+
+### People Search
+- **`search_people`** - Search for people by name, email, uid, department
+- **`get_person_details`** - Get detailed information about a specific person
+
+### Organization Charts
+- **`get_organization_chart`** - Build hierarchical org charts from any manager
+- **`find_manager_chain`** - Get the complete management chain for any person
+
+### Groups & Teams
+- **`search_groups`** - Search for groups and teams
+- **`get_person_groups`** - Find all groups a person belongs to
+- **`get_group_members`** - List all members of a specific group
+
+### Locations & Offices
+- **`find_locations`** - Discover office locations and people counts
+- **`get_people_at_location`** - Find all colleagues at a specific office
+
+### Utilities
+- **`test_connection`** - Test LDAP connectivity and configuration
+
 ## 🛠️ Installation
 
 ```bash
