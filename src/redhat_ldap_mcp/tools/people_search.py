@@ -51,7 +51,6 @@ class PeopleSearchTool:
             "givenName",
             "mail",
             "title",
-            "department",
             "manager",
             "telephoneNumber",
             "mobile",
@@ -63,19 +62,17 @@ class PeopleSearchTool:
             "employeeType",
         ]
 
-        # Add Red Hat specific attributes if available
+        # Add schema-specific attributes if available
         if hasattr(self.connector.ldap_config, "schema"):
             schema = self.connector.ldap_config.schema
+
+            # Add corporate attributes
+            if hasattr(schema, "corporate_attributes"):
+                attributes.extend(schema.corporate_attributes)
+
+            # Add Red Hat specific attributes
             if hasattr(schema, "redhat_attributes"):
-                attributes.extend(
-                    [
-                        "rhatJobTitle",
-                        "rhatCostCenter",
-                        "rhatLocation",
-                        "rhatWorkerId",
-                        "rhatPersonType",
-                    ]
-                )
+                attributes.extend(schema.redhat_attributes)
 
         try:
             results = self.connector.search(
@@ -182,7 +179,7 @@ class PeopleSearchTool:
                          (uid=*{term}*)
                          (mail=*{term}*)
                          (title=*{term}*)
-                         (department=*{term}*)))"""
+                         (rhatCostCenterDesc=*{term}*)))"""
         elif len(parts) == 2:
             # Two terms - likely first and last name
             first, last = parts
@@ -255,7 +252,7 @@ class PeopleSearchTool:
             "surname": attrs.get("sn"),
             "mail": attrs.get("mail"),
             "title": attrs.get("title") or attrs.get("rhatJobTitle"),
-            "department": attrs.get("department"),
+            "department": attrs.get("rhatCostCenterDesc"),
             "manager": attrs.get("manager"),
             "phone": attrs.get("telephoneNumber"),
             "mobile": attrs.get("mobile"),

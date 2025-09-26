@@ -145,3 +145,7 @@ dmypy.json
 config/local-*.json
 logs/
 *.log
+
+# Temporary debug/test files
+debug_ldap_connection.py
+test_ldap_fix.py

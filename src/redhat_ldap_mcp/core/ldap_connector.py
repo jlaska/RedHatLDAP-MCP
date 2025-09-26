@@ -213,21 +213,61 @@ class LDAPConnector:
                 logger.debug(f"Bind failed: {connection.result}")
                 return False
 
-            # Test with a simple search
-            success = connection.search(
-                search_base=self.ldap_config.base_dn,
-                search_filter="(objectClass=*)",
-                search_scope=ldap3.BASE,
-                attributes=["namingContexts"],
-                size_limit=1,
-            )
+            # Test with different search strategies for corporate LDAP compatibility
+            test_strategies = [
+                # Strategy 1: Root DSE search (standard but may not work with corporate LDAP)
+                {
+                    "search_base": self.ldap_config.base_dn,
+                    "search_filter": "(objectClass=*)",
+                    "search_scope": ldap3.BASE,
+                    "attributes": ["namingContexts"],
+                    "name": "Root DSE",
+                },
+                # Strategy 2: Simple base DN search
+                {
+                    "search_base": self.ldap_config.base_dn,
+                    "search_filter": "(objectClass=*)",
+                    "search_scope": ldap3.SUBTREE,
+                    "attributes": ["objectClass"],
+                    "name": "Base DN subtree",
+                },
+                # Strategy 3: Search for any person object (most likely to work)
+                {
+                    "search_base": self.ldap_config.base_dn,
+                    "search_filter": "(objectClass=person)",
+                    "search_scope": ldap3.SUBTREE,
+                    "attributes": ["uid"],
+                    "name": "Person search",
+                },
+            ]
 
-            if success:
-                logger.debug("Connection test successful")
-                return True
-            else:
-                logger.debug(f"Search test failed: {connection.result}")
-                return False
+            for strategy in test_strategies:
+                try:
+                    success = connection.search(
+                        search_base=strategy["search_base"],
+                        search_filter=strategy["search_filter"],
+                        search_scope=strategy["search_scope"],
+                        attributes=strategy["attributes"],
+                        size_limit=1,
+                    )
+
+                    if success and connection.entries:
+                        logger.debug(
+                            f"Connection test successful using {strategy['name']} strategy"
+                        )
+                        return True
+                    elif success:
+                        logger.debug(f"{strategy['name']} search succeeded but returned no entries")
+                    else:
+                        logger.debug(f"{strategy['name']} search failed: {connection.result}")
+
+                except Exception as e:
+                    logger.debug(f"{strategy['name']} strategy failed: {e}")
+                    continue
+
+            # If all strategies failed, the connection is not working
+            logger.debug("All connection test strategies failed")
+            return False
 
         except Exception as e:
             logger.debug(f"Connection test failed: {e}")

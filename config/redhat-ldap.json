@@ -14,7 +14,7 @@
     "group_search_base": "ou=adhoc,ou=managedGroups,dc=redhat,dc=com",
     "corporate_attributes": [
       "uid", "cn", "mail", "givenName", "sn", "displayName",
-      "telephoneNumber", "manager", "title", "department",
+      "telephoneNumber", "manager", "title", "rhatCostCenterDesc",
       "employeeNumber", "employeeType"
     ],
     "redhat_attributes": [

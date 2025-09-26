@@ -58,6 +58,7 @@ Issues = "https://github.com/jlaska/RedHatLDAP-MCP/issues"
 
 [project.scripts]
 redhat-ldap-mcp = "redhat_ldap_mcp.server:main"
+redhat-ldap-mcp-http = "redhat_ldap_mcp.server_http:main"
 
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
