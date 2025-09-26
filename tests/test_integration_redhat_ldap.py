@@ -37,7 +37,7 @@ def test_ldap_connection():
         return None
 
 
-def test_people_search(connector):
+def check_people_search(connector):
     """Test people search functionality."""
     print("\n👥 Testing People Search...")
 
@@ -68,7 +68,7 @@ def test_people_search(connector):
         return False
 
 
-def test_organization_tools(connector):
+def check_organization_tools(connector):
     """Test organization tools."""
     print("\n🏢 Testing Organization Tools...")
 
@@ -91,7 +91,7 @@ def test_organization_tools(connector):
         return False
 
 
-def test_groups_tools(connector):
+def check_groups_tools(connector):
     """Test groups functionality."""
     print("\n👫 Testing Groups Tools...")
 
@@ -114,7 +114,7 @@ def test_groups_tools(connector):
         return False
 
 
-def test_locations_tools(connector):
+def check_locations_tools(connector):
     """Test locations functionality."""
     print("\n📍 Testing Locations Tools...")
 
@@ -149,7 +149,12 @@ def main():
         sys.exit(1)
 
     # Test all tools
-    tests = [test_people_search, test_organization_tools, test_groups_tools, test_locations_tools]
+    tests = [
+        check_people_search,
+        check_organization_tools,
+        check_groups_tools,
+        check_locations_tools,
+    ]
 
     passed = 0
     for test_func in tests:
