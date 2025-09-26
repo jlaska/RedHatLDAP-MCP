@@ -1,5 +1,8 @@
 # RedHat LDAP MCP Server
 
+[![Test Suite](https://github.com/jlaska/RedHatLDAP-MCP/actions/workflows/tests.yml/badge.svg)](https://github.com/jlaska/RedHatLDAP-MCP/actions/workflows/tests.yml)
+[![Lint](https://github.com/jlaska/RedHatLDAP-MCP/actions/workflows/lint.yml/badge.svg)](https://github.com/jlaska/RedHatLDAP-MCP/actions/workflows/lint.yml)
+
 A specialized Model Context Protocol (MCP) server designed for corporate LDAP directories, with optimizations for Red Hat's LDAP environment and other OpenLDAP-based corporate systems.
 
 ## 🎯 Purpose
