@@ -159,6 +159,8 @@ class PeopleSearchTool:
         # Escape special LDAP characters
         escaped_query = re.sub(r"([*()\\])", r"\\\1", query)
 
+        logger.debug(f"Building search filter for query: '{query}' -> escaped: '{escaped_query}'")
+
         # Check if it looks like an email
         if "@" in query:
             return f"(&(objectClass=person)(mail=*{escaped_query}*))"
@@ -172,21 +174,18 @@ class PeopleSearchTool:
         if len(parts) == 1:
             # Single term - search in multiple fields
             term = parts[0]
-            return f"""(&(objectClass=person)
-                       (|(cn=*{term}*)
-                         (givenName=*{term}*)
-                         (sn=*{term}*)
-                         (uid=*{term}*)
-                         (mail=*{term}*)
-                         (title=*{term}*)
-                         (rhatCostCenterDesc=*{term}*)))"""
+            return (
+                f"(&(objectClass=person)(|(cn=*{term}*)(givenName=*{term}*)"
+                f"(sn=*{term}*)(uid=*{term}*)(mail=*{term}*)(title=*{term}*)"
+                f"(rhatCostCenterDesc=*{term}*)))"
+            )
         elif len(parts) == 2:
             # Two terms - likely first and last name
             first, last = parts
-            return f"""(&(objectClass=person)
-                       (|((&(givenName=*{first}*)(sn=*{last}*))
-                         (&(givenName=*{last}*)(sn=*{first}*))
-                         (cn=*{escaped_query}*)))"""
+            # Use simple CN search for two names - more reliable than complex OR logic
+            search_filter = f"(&(objectClass=person)(cn=*{escaped_query}*))"
+            logger.debug(f"Generated two-part filter: {search_filter}")
+            return search_filter
         else:
             # Multiple terms - search in common name
             return f"(&(objectClass=person)(cn=*{escaped_query}*))"
@@ -248,6 +247,7 @@ class PeopleSearchTool:
             "uid": uid,
             "dn": dn,
             "cn": attrs.get("cn"),
+            "display_name": attrs.get("displayName"),
             "given_name": attrs.get("givenName"),
             "surname": attrs.get("sn"),
             "mail": attrs.get("mail"),
@@ -267,9 +267,48 @@ class PeopleSearchTool:
             "employee_id": attrs.get("employeeNumber") or attrs.get("rhatWorkerId"),
             "employee_type": attrs.get("employeeType") or attrs.get("rhatPersonType"),
             "cost_center": attrs.get("rhatCostCenter"),
+            # Red Hat specific fields
+            "rhat_job_title": attrs.get("rhatJobTitle"),
+            "rhat_cost_center": attrs.get("rhatCostCenter"),
+            "rhat_cost_center_desc": attrs.get("rhatCostCenterDesc"),
+            "rhat_location": attrs.get("rhatLocation"),
+            "rhat_bio": attrs.get("rhatBio"),
+            "rhat_geo": attrs.get("rhatGeo"),
+            "rhat_organization": attrs.get("rhatOrganization"),
+            "rhat_job_role": attrs.get("rhatJobRole"),
+            "rhat_team_lead": attrs.get("rhatTeamLead"),
+            "rhat_original_hire_date": self._format_date(attrs.get("rhatOriginalHireDate")),
+            "rhat_hire_date": self._format_date(attrs.get("rhatHireDate")),
+            "rhat_worker_id": self._format_value(attrs.get("rhatWorkerId")),
+            "rhat_building_code": attrs.get("rhatBuildingCode"),
+            "rhat_office_location": attrs.get("rhatOfficeLocation"),
         }
 
         # Clean up None values and empty strings
         person = {k: v for k, v in person.items() if v}
 
         return person
+
+    def _format_date(self, date_value: Any) -> str | None:
+        """Format date value to string."""
+        if date_value is None:
+            return None
+
+        # Handle datetime objects
+        if hasattr(date_value, "strftime"):
+            return date_value.strftime("%Y-%m-%d")
+
+        # Handle string values
+        if isinstance(date_value, str):
+            return date_value
+
+        # Convert other types to string
+        return str(date_value)
+
+    def _format_value(self, value: Any) -> str | None:
+        """Format any value to string."""
+        if value is None:
+            return None
+
+        # Convert to string
+        return str(value)
