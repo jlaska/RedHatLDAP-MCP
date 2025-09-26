@@ -16,7 +16,7 @@ from .server import mcp
 logger = get_logger(__name__)
 
 
-def main():
+def main() -> None:
     """Run the MCP server in HTTP mode for development/testing."""
     parser = argparse.ArgumentParser(description="RedHat LDAP MCP HTTP Server")
     parser.add_argument("--host", default="localhost", help="Host to bind to")

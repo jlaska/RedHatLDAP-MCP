@@ -55,7 +55,7 @@ class GroupsTool:
             f"(&(objectClass=posixGroup)(|(cn=*{escaped_query}*)(description=*{escaped_query}*)))",
         ]
 
-        all_results = []
+        all_results: list[dict[str, Any]] = []
 
         for filter_str in [search_filter] + alt_filters:
             try:
@@ -300,7 +300,7 @@ class GroupsTool:
         if hasattr(self.connector.ldap_config, "schema"):
             schema = self.connector.ldap_config.schema
             if hasattr(schema, "group_search_base"):
-                return schema.group_search_base
+                return str(schema.group_search_base)
 
         # Fall back to common patterns
         base_dn = self.connector.ldap_config.base_dn

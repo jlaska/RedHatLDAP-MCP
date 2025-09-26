@@ -206,7 +206,12 @@ class OrganizationTool:
         if not person:
             return {}
 
-        team_structure = {"person": person, "manager": None, "peers": [], "direct_reports": []}
+        team_structure: dict[str, Any] = {
+            "person": person,
+            "manager": None,
+            "peers": [],
+            "direct_reports": [],
+        }
 
         # Get manager
         manager_dn = person.get("manager")
@@ -250,7 +255,8 @@ class OrganizationTool:
 
             for report in direct_reports:
                 child_node = self._build_org_node(report, current_depth + 1, max_depth)
-                node["direct_reports"].append(child_node)
+                if isinstance(node["direct_reports"], list):
+                    node["direct_reports"].append(child_node)
 
         return node
 
@@ -276,7 +282,8 @@ class OrganizationTool:
 
             for report in direct_reports:
                 child_node = self._build_org_node_summary(report, current_depth + 1, max_depth)
-                node["direct_reports"].append(child_node)
+                if isinstance(node["direct_reports"], list):
+                    node["direct_reports"].append(child_node)
 
         return node
 

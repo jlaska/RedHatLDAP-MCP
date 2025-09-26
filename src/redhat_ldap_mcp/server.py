@@ -394,7 +394,7 @@ def test_connection() -> dict[str, Any]:
         return {"connected": False, "error": str(e)}
 
 
-def main():
+def main() -> None:
     """Run the MCP server."""
     mcp.run()
 

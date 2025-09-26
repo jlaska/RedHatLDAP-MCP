@@ -8,7 +8,7 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 
 class LDAPConfig(BaseModel):
@@ -31,7 +31,7 @@ class LDAPConfig(BaseModel):
 
     @field_validator("server")
     @classmethod
-    def validate_server(cls, v):
+    def validate_server(cls, v: str) -> str:
         """Validate server URL format."""
         if not v.startswith(("ldap://", "ldaps://")):
             raise ValueError("Server must start with ldap:// or ldaps://")
@@ -39,7 +39,7 @@ class LDAPConfig(BaseModel):
 
     @field_validator("auth_method")
     @classmethod
-    def validate_auth_requirements(cls, v, values):
+    def validate_auth_requirements(cls, v: str, values: ValidationInfo) -> str:
         """Validate authentication method requirements."""
         # Note: In Pydantic v2, we need to handle validation differently
         # This validator will be called for auth_method field
@@ -129,7 +129,7 @@ class LoggingConfig(BaseModel):
 
     @field_validator("level")
     @classmethod
-    def validate_level(cls, v):
+    def validate_level(cls, v: str) -> str:
         """Validate logging level."""
         valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         if v.upper() not in valid_levels:
@@ -148,7 +148,7 @@ class PerformanceConfig(BaseModel):
 
     @field_validator("max_retries", "page_size", "max_results", "cache_timeout")
     @classmethod
-    def validate_positive_int(cls, v):
+    def validate_positive_int(cls, v: int) -> int:
         """Validate positive integers."""
         if v <= 0:
             raise ValueError("Value must be positive")
@@ -156,7 +156,7 @@ class PerformanceConfig(BaseModel):
 
     @field_validator("retry_delay")
     @classmethod
-    def validate_positive_float(cls, v):
+    def validate_positive_float(cls, v: float) -> float:
         """Validate positive float."""
         if v <= 0:
             raise ValueError("Retry delay must be positive")
@@ -191,9 +191,9 @@ class Config(BaseModel):
 
     @field_validator("schema")
     @classmethod
-    def validate_schema_consistency(cls, v, info):
+    def validate_schema_consistency(cls, v: "SchemaConfig", info: ValidationInfo) -> "SchemaConfig":
         """Validate schema configuration consistency."""
-        if hasattr(info, "data") and "ldap" in info.data:
+        if hasattr(info, "data") and info.data and "ldap" in info.data:
             ldap_config = info.data["ldap"]
             base_dn = ldap_config.base_dn.lower()
 

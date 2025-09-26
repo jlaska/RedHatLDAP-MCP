@@ -224,7 +224,7 @@ class PeopleSearchTool:
         if hasattr(self.connector.ldap_config, "schema"):
             schema = self.connector.ldap_config.schema
             if hasattr(schema, "person_search_base"):
-                return schema.person_search_base
+                return str(schema.person_search_base)
 
         # Fall back to common patterns
         base_dn = self.config.base_dn
@@ -358,7 +358,7 @@ class PeopleSearchTool:
 
         # Handle datetime objects
         if hasattr(date_value, "strftime"):
-            return date_value.strftime("%Y-%m-%d")
+            return str(date_value.strftime("%Y-%m-%d"))
 
         # Handle string values
         if isinstance(date_value, str):

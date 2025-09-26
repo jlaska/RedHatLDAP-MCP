@@ -360,7 +360,7 @@ class LDAPConnector:
             logger.error(f"Search error: {e}")
             raise
 
-    def _process_entry(self, entry) -> dict[str, Any]:
+    def _process_entry(self, entry: Any) -> dict[str, Any]:
         """
         Process LDAP entry into dictionary format.
 
@@ -451,7 +451,11 @@ class LDAPConnector:
         try:
             connection = self.connect()
 
-            schema_info = {"object_classes": [], "attributes": [], "naming_contexts": []}
+            schema_info: dict[str, Any] = {
+                "object_classes": [],
+                "attributes": [],
+                "naming_contexts": [],
+            }
 
             # Get naming contexts
             if connection.server.info and connection.server.info.naming_contexts:
@@ -475,10 +479,10 @@ class LDAPConnector:
             logger.error(f"Schema info retrieval failed: {e}")
             return {"error": str(e)}
 
-    def __enter__(self):
+    def __enter__(self) -> "LDAPConnector":
         """Context manager entry."""
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Context manager exit."""
         self.disconnect()

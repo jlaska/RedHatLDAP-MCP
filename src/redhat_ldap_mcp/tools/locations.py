@@ -72,7 +72,7 @@ class LocationsTool:
             )
 
             # Group people by location
-            location_counts = defaultdict(
+            location_counts: dict[str, dict[str, Any]] = defaultdict(
                 lambda: {"people": [], "cities": set(), "states": set(), "countries": set()}
             )
 
@@ -92,7 +92,9 @@ class LocationsTool:
                 )
 
                 if office:
-                    location_counts[office]["people"].append({"uid": person_uid, "cn": person_cn})
+                    people_list = location_counts[office]["people"]
+                    if isinstance(people_list, list):
+                        people_list.append({"uid": person_uid, "cn": person_cn})
 
                     # Add geographic information
                     city = attrs.get("l")
@@ -100,11 +102,17 @@ class LocationsTool:
                     country = attrs.get("co")
 
                     if city:
-                        location_counts[office]["cities"].add(city)
+                        cities_set = location_counts[office]["cities"]
+                        if hasattr(cities_set, "add"):
+                            cities_set.add(city)
                     if state:
-                        location_counts[office]["states"].add(state)
+                        states_set = location_counts[office]["states"]
+                        if hasattr(states_set, "add"):
+                            states_set.add(state)
                     if country:
-                        location_counts[office]["countries"].add(country)
+                        countries_set = location_counts[office]["countries"]
+                        if hasattr(countries_set, "add"):
+                            countries_set.add(country)
 
             # Convert to location list
             locations = []
@@ -125,7 +133,7 @@ class LocationsTool:
                 locations.append(location_info)
 
             # Sort by people count (descending)
-            locations.sort(key=lambda x: x["people_count"], reverse=True)
+            locations.sort(key=lambda x: x.get("people_count", 0), reverse=True)  # type: ignore[return-value,arg-type]
 
             logger.info(f"Found {len(locations)} locations")
             return locations
@@ -210,7 +218,7 @@ class LocationsTool:
             )
 
             # Build hierarchy
-            hierarchy = defaultdict(
+            hierarchy: dict[str, Any] = defaultdict(
                 lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
             )
 
@@ -229,7 +237,7 @@ class LocationsTool:
                 hierarchy[country][state][city][office] += 1
 
             # Convert to regular dict for JSON serialization
-            result = {}
+            result: dict[str, Any] = {}
             for country, states in hierarchy.items():
                 result[country] = {}
                 for state, cities in states.items():
