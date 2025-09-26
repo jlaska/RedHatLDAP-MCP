@@ -1,0 +1,2 @@
+[console_scripts]
+redhat-ldap-mcp = redhat_ldap_mcp.server:main

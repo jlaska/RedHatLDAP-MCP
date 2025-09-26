@@ -1,0 +1,17 @@
+mcp@ git+https://github.com/modelcontextprotocol/python-sdk.git
+ldap3<3.0.0,>=2.9.1
+requests<3.0.0,>=2.31.0
+pydantic<3.0.0,>=2.0.0
+fastmcp>=0.2.0
+asgiref>=3.7.0
+python-dateutil<3.0.0,>=2.8.0
+typing-extensions>=4.5.0
+
+[dev]
+pytest<8.0.0,>=7.0.0
+black<24.0.0,>=23.0.0
+mypy<2.0.0,>=1.0.0
+pytest-asyncio<0.22.0,>=0.21.0
+ruff<0.2.0,>=0.1.0
+types-requests<3.0.0,>=2.31.0
+pytest-mock<4.0.0,>=3.11.0

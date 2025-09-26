@@ -1,0 +1,54 @@
+{
+  "ldap": {
+    "server": "ldap://ldap.corp.redhat.com",
+    "base_dn": "dc=redhat,dc=com",
+    "auth_method": "anonymous",
+    "timeout": 30,
+    "receive_timeout": 10,
+    "use_ssl": false
+  },
+  "schema": {
+    "person_object_class": "rhatPerson",
+    "group_object_class": "groupOfNames",
+    "person_search_base": "ou=users,dc=redhat,dc=com",
+    "group_search_base": "ou=adhoc,ou=managedGroups,dc=redhat,dc=com",
+    "corporate_attributes": [
+      "uid", "cn", "mail", "givenName", "sn", "displayName",
+      "telephoneNumber", "manager", "title", "department",
+      "employeeNumber", "employeeType"
+    ],
+    "redhat_attributes": [
+      "rhatJobTitle", "rhatCostCenter", "rhatLocation", "rhatBio",
+      "rhatGeo", "rhatOrganization", "rhatJobRole", "rhatTeamLead",
+      "rhatOriginalHireDate", "rhatHireDate", "rhatWorkerId",
+      "rhatCostCenterDesc", "rhatBuildingCode", "rhatOfficeLocation"
+    ],
+    "search_fields": {
+      "person": ["uid", "cn", "mail", "displayName", "givenName", "sn"],
+      "group": ["cn", "description"]
+    }
+  },
+  "security": {
+    "enable_tls": false,
+    "validate_certificate": false,
+    "require_secure_connection": false
+  },
+  "logging": {
+    "level": "DEBUG",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "file": "redhat_ldap_mcp.log"
+  },
+  "performance": {
+    "max_retries": 3,
+    "retry_delay": 1.0,
+    "page_size": 100,
+    "max_results": 1000,
+    "cache_timeout": 300
+  },
+  "export": {
+    "formats": ["json", "csv"],
+    "max_export_size": 5000,
+    "include_sensitive": false,
+    "sensitive_attributes": ["userPassword"]
+  }
+}
