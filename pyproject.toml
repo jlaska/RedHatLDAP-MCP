@@ -96,7 +96,7 @@ warn_no_return = true
 warn_unreachable = true
 
 [tool.ruff]
-select = ["E", "F", "B", "I"]
+select = ["E", "F", "B"]
 ignore = []
 line-length = 100
 target-version = "py310"
